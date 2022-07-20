@@ -1,0 +1,315 @@
+{
+	"openapi": "3.0.3",
+	"info": {
+	  "title": "Blogging Express API with Swagger",
+	  "version": "v1",
+	  "description": "This is a simple CRUD API application made with Express and documented with Swagger"
+	},
+	"servers": [
+	  {
+		"url": "http://localhost:3000"
+	  }
+	],
+	"tags": [
+	  {
+		"name": "API functions"
+	  }
+	],
+  
+	"components": {
+	  "schemas": {
+		"Post": {
+		  "type": "object",
+		  "required": ["title", "content", "user_id"],
+		  "uniqueItems": ["title", "content"],
+		  "properties": {
+			"post_id": {
+			  "type": "integer",
+			  "format": "int32"
+			},
+			"title": {
+			  "type": "string"
+			},
+			"content": {
+			  "type": "string"
+			},
+			"user_id": {
+			  "type": "integer",
+			  "format": "int32"
+			},
+			"isHidden": {
+			  "type": "boolean"
+			}
+		  },
+		  "example": {
+			"title": "Two-Factor Authentication",
+			"content": "Additional layer of security to your online accounts.",
+			"isHidden": false
+		  }
+		},
+		"User": {
+		  "type": "object",
+		  "properties": {
+			"user_id": {
+			  "type": "integer",
+			  "format": "int32"
+			},
+			"email": {
+			  "type": "string"
+			},
+			"name": {
+			  "type": "string"
+			},
+  
+			"password": {
+			  "type": "string"
+			}
+		  },
+		  "required": ["email", "name", "password"],
+		  "example": {
+			"email": "blogger@mail.org",
+			"name": "fun_blogger",
+			"password": "#xbl0Gx%"
+		  }
+		}
+	  },
+	  "securitySchemes": {
+		"bearerAuth": {
+		  "type": "http",
+		  "name": "Authorization",
+		  "description": "JWT Authorization header using the Bearer scheme.",
+		  "scheme": "bearer",
+		  "bearerFormat": "JWT"
+		}
+	  }
+	},
+  
+	"paths": {
+	  "api/v1/auth/login": {
+		"post": {
+		  "tags": ["Authorization"],
+		  "summary": "Sign-In for bloggers and admin",
+		  "description": "This router for authenticate users by typing username and password",
+		  "parameters": [
+			{
+			  "name": "User credentials",
+			  "in": "body",
+			  "schema": {
+				"type": "object",
+				"properties": {
+				  "user_id": {
+					"type": "integer",
+					"format": "int32"
+				  },
+				  "email": {
+					"type": "string"
+				  },
+				  "name": {
+					"type": "string"
+				  },
+  
+				  "password": {
+					"type": "string"
+				  }
+				},
+				"required": ["email", "password"],
+				"example": {
+				  "email": "blogger@mail.org",
+				  "password": "#xbl0Gx%"
+				}
+			  }
+			}
+		  ],
+		  "responses": {
+			"200": {
+			  "description": "LogIn successfully"
+			},
+			"401": {
+			  "description": "Unauthorized, please SignIn"
+			},
+			"422": {
+			  "description": "email && password cannot be empty"
+			}
+		  }
+		}
+	  },
+	  "api/v1/auth/register": {
+		"post": {
+		  "tags": ["Authorization"],
+		  "summary": "Only sign-up for bloggers",
+		  "description": "Create new user in system",
+		  "parameters": [
+			{
+			  "name": "User data",
+			  "in": "body",
+			  "description": "User that we want to create",
+			  "schema": {
+				"$ref": "#/components/schemas/User"
+			  }
+			}
+		  ],
+		  "produces": ["application/json"],
+		  "responses": {
+			"200": {
+			  "description": "New user is created"
+			}
+		  }
+		}
+	  },
+  
+	  "api/v1/posts": {
+		"get": {
+		  "tags": ["Posts"],
+		  "summary": "Bloggers can see other bloggers' posts as long as they are public and can see other posts from external systems",
+		  "responses": {
+			"200": {
+			  "content": {
+				"application/json": {
+				  "schema": {
+					"type": "array",
+					"items": {
+					  "$ref": "#/components/schemas/Post"
+					}
+				  }
+				}
+			  }
+			},
+			"401": {
+			  "description": "Unauthorized, please SignIn"
+			}
+		  }
+		},
+  
+		"post": {
+		  "tags": ["Posts"],
+		  "summary": "Bloggers can create posts",
+		  "parameters": [
+			{
+			  "name": "New post",
+			  "in": "body",
+			  "schema": {
+				"$ref": "#/components/schemas/Post"
+			  }
+			}
+		  ],
+		  "responses": {
+			"200": {
+			  "description": "OK"
+			},
+			"401": {
+			  "description": "Unauthorized, please SignIn"
+			}
+		  }
+		}
+	  },
+	  "api/v1/posts/user": {
+		"get": {
+		  "tags": ["Posts"],
+		  "summary": "Bloggers can see their posts whether they're public or hidden",
+		  "responses": {
+			"200": {
+			  "content": {
+				"application/json": {
+				  "schema": {
+					"type": "array",
+					"items": {
+					  "$ref": "#/components/schemas/Post"
+					}
+				  }
+				}
+			  }
+			},
+			"401": {
+			  "description": "Unauthorized, please SignIn"
+			}
+		  }
+		}
+	  },
+	  "api/v1/posts/{id}": {
+		"delete": {
+		  "tags": ["Posts"],
+		  "parameters": [
+			{
+			  "name": ":post_id",
+			  "in": "path",
+			  "required": true
+			}
+		  ],
+		  "summary": "Bloggers can remove their posts && admins can remove any public post",
+		  "responses": {
+			"200": {
+			  "description": "OK"
+			},
+			"401": {
+			  "description": "Unauthorized, please SignIn"
+			}
+		  }
+		},
+  
+		"patch": {
+		  "tags": ["Posts"],
+		  "parameters": [
+			{
+			  "name": ":post_id",
+			  "in": "path",
+			  "required": true
+			},
+  
+			{
+			  "name": "Update post",
+			  "in": "body",
+			  "schema": {
+				"$ref": "#/components/schemas/Post"
+			  }
+			}
+		  ],
+		  "summary": "Bloggers can update their posts ",
+		  "responses": {
+			"200": {
+			  "description": "OK"
+			},
+			"401": {
+			  "description": "Unauthorized, please SignIn"
+			},
+			"404": {
+			  "description": "Post not found"
+			}
+		  }
+		}
+	  },
+  
+	  "api/v1/posts/status/{id}": {
+		"put": {
+		  "tags": ["Posts"],
+		  "summary": "Bloggers can publish and hide their posts",
+		  "parameters": [
+			{
+			  "name": ":post_id",
+			  "in": "path",
+			  "required": true
+			},
+			{
+			  "name": "Update post status",
+			  "in": "body",
+			  "schema": {
+				"type": "object",
+				"properties": {
+				  "isHidden": {
+					"type": "boolean"
+				  }
+				}
+			  }
+			}
+		  ],
+		  "responses": {
+			"200": {
+			  "description": "OK"
+			},
+			"404":{
+			  "description": "Post not found"
+			}
+		  }
+		}
+	  }
+	}
+  }
